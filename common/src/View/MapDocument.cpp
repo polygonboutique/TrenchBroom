@@ -529,7 +529,7 @@ namespace TrenchBroom {
             return visitor.faces();
         }
 
-        const std::vector<Model::BrushFace*>& MapDocument::selectedBrushFaces() const {
+        std::vector<Model::BrushFace*> MapDocument::selectedBrushFaces() const {
             return m_selectedBrushFaces;
         }
 
