@@ -199,12 +199,12 @@ namespace TrenchBroom {
             return m_game.get() != nullptr && m_game->isGamePathPreference(path);
         }
 
-        Model::Layer* MapDocument::currentLayer() const {
+        Model::LayerNode* MapDocument::currentLayer() const {
             ensure(m_currentLayer != nullptr, "currentLayer is null");
             return m_currentLayer;
         }
 
-        void MapDocument::setCurrentLayer(Model::Layer* currentLayer) {
+        void MapDocument::setCurrentLayer(Model::LayerNode* currentLayer) {
             ensure(currentLayer != nullptr, "currentLayer is null");
             assert(!currentLayer->locked());
             assert(!currentLayer->hidden());
@@ -975,7 +975,7 @@ namespace TrenchBroom {
             explicit MatchGroupableNodes(const Model::World* world) : m_world(world) {}
         public:
             bool operator()(const Model::World*) const  { return false; }
-            bool operator()(const Model::Layer*) const  { return false; }
+            bool operator()(const Model::LayerNode*) const  { return false; }
             bool operator()(const Model::Group*) const  { return true;  }
             bool operator()(const Model::Entity*) const { return true; }
             bool operator()(const Model::BrushNode* brush) const   { return brush->entity() == m_world; }
@@ -1043,7 +1043,7 @@ namespace TrenchBroom {
         }
 
         void MapDocument::isolate() {
-            const std::vector<Model::Layer*>& layers = m_world->allLayers();
+            const std::vector<Model::LayerNode*>& layers = m_world->allLayers();
 
             Model::CollectNotTransitivelySelectedOrDescendantSelectedNodesVisitor collectUnselected;
             Model::Node::recurse(std::begin(layers), std::end(layers), collectUnselected);
@@ -1074,7 +1074,7 @@ namespace TrenchBroom {
         }
 
         void MapDocument::showAll() {
-            const std::vector<Model::Layer*>& layers = m_world->allLayers();
+            const std::vector<Model::LayerNode*>& layers = m_world->allLayers();
             Model::CollectNodesVisitor collect;
             Model::Node::recurse(std::begin(layers), std::end(layers), collect);
             resetVisibility(collect.nodes());
@@ -1771,7 +1771,7 @@ namespace TrenchBroom {
                 m_manager(manager) {}
         private:
             void doVisit(Model::World*) override   {}
-            void doVisit(Model::Layer*) override   {}
+            void doVisit(Model::LayerNode*) override   {}
             void doVisit(Model::Group*) override   {}
             void doVisit(Model::Entity*) override {}
             void doVisit(Model::BrushNode* brush) override   {
@@ -1784,7 +1784,7 @@ namespace TrenchBroom {
         class MapDocument::UnsetTextures : public Model::NodeVisitor {
         private:
             void doVisit(Model::World*) override   {}
-            void doVisit(Model::Layer*) override   {}
+            void doVisit(Model::LayerNode*) override   {}
             void doVisit(Model::Group*) override   {}
             void doVisit(Model::Entity*) override {}
             void doVisit(Model::BrushNode* brush) override   {
@@ -1828,7 +1828,7 @@ namespace TrenchBroom {
             m_manager(manager) {}
         private:
             void doVisit(Model::World* world) override   { handle(world); }
-            void doVisit(Model::Layer*) override         {}
+            void doVisit(Model::LayerNode*) override         {}
             void doVisit(Model::Group*) override         {}
             void doVisit(Model::Entity* entity) override { handle(entity); }
             void doVisit(Model::BrushNode*) override         {}
@@ -1841,7 +1841,7 @@ namespace TrenchBroom {
         class MapDocument::UnsetEntityDefinitions : public Model::NodeVisitor {
         private:
             void doVisit(Model::World* world) override   { world->setDefinition(nullptr); }
-            void doVisit(Model::Layer*) override         {}
+            void doVisit(Model::LayerNode*) override         {}
             void doVisit(Model::Group*) override         {}
             void doVisit(Model::Entity* entity) override { entity->setDefinition(nullptr); }
             void doVisit(Model::BrushNode*) override         {}
@@ -1890,7 +1890,7 @@ namespace TrenchBroom {
             m_manager(manager) {}
         private:
             void doVisit(Model::World*) override         {}
-            void doVisit(Model::Layer*) override         {}
+            void doVisit(Model::LayerNode*) override         {}
             void doVisit(Model::Group*) override         {}
             void doVisit(Model::Entity* entity) override {
                 const auto modelSpec = Assets::safeGetModelSpecification(m_logger, entity->classname(), [&]() {
@@ -1905,7 +1905,7 @@ namespace TrenchBroom {
         class MapDocument::UnsetEntityModels : public Model::NodeVisitor {
         private:
             void doVisit(Model::World*) override         {}
-            void doVisit(Model::Layer*) override         {}
+            void doVisit(Model::LayerNode*) override         {}
             void doVisit(Model::Group*) override         {}
             void doVisit(Model::Entity* entity) override { entity->setModelFrame(nullptr); }
             void doVisit(Model::BrushNode*) override         {}
@@ -2022,7 +2022,7 @@ namespace TrenchBroom {
         class MapDocument::ClearNodeTagsVisitor : public Model::NodeVisitor {
         private:
             void doVisit(Model::World* world)   override { initializeNodeTags(world); }
-            void doVisit(Model::Layer* layer)   override { initializeNodeTags(layer); }
+            void doVisit(Model::LayerNode* layer)   override { initializeNodeTags(layer); }
             void doVisit(Model::Group* group)   override { initializeNodeTags(group); }
             void doVisit(Model::Entity* entity) override { initializeNodeTags(entity); }
             void doVisit(Model::BrushNode* brush)   override { initializeNodeTags(brush); }
@@ -2040,7 +2040,7 @@ namespace TrenchBroom {
             m_tagManager(tagManager) {}
         private:
             void doVisit(Model::World* world)   override { initializeNodeTags(world); }
-            void doVisit(Model::Layer* layer)   override { initializeNodeTags(layer); }
+            void doVisit(Model::LayerNode* layer)   override { initializeNodeTags(layer); }
             void doVisit(Model::Group* group)   override { initializeNodeTags(group); }
             void doVisit(Model::Entity* entity) override { initializeNodeTags(entity); }
             void doVisit(Model::BrushNode* brush)   override { initializeNodeTags(brush); }
@@ -2087,7 +2087,7 @@ namespace TrenchBroom {
                 m_tagManager(tagManager) {}
         private:
             void doVisit(Model::World*) override         {}
-            void doVisit(Model::Layer*) override         {}
+            void doVisit(Model::LayerNode*) override         {}
             void doVisit(Model::Group*) override         {}
             void doVisit(Model::Entity*) override        {}
             void doVisit(Model::BrushNode* brush)   override { brush->initializeTags(m_tagManager); }
