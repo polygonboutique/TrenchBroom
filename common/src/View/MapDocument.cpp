@@ -54,7 +54,7 @@
 #include "Model/EmptyAttributeValueIssueGenerator.h"
 #include "Model/EmptyBrushEntityIssueGenerator.h"
 #include "Model/EmptyGroupIssueGenerator.h"
-#include "Model/Entity.h"
+#include "Model/EntityNode.h"
 #include "Model/LinkSourceIssueGenerator.h"
 #include "Model/LinkTargetIssueGenerator.h"
 #include "Model/Game.h"
@@ -874,7 +874,7 @@ namespace TrenchBroom {
             return false;
         }
 
-        Model::Entity* MapDocument::createPointEntity(const Assets::PointEntityDefinition* definition, const vm::vec3& delta) {
+        Model::EntityNode* MapDocument::createPointEntity(const Assets::PointEntityDefinition* definition, const vm::vec3& delta) {
             ensure(definition != nullptr, "definition is null");
 
             auto* entity = m_world->createEntity();
@@ -892,7 +892,7 @@ namespace TrenchBroom {
             return entity;
         }
 
-        Model::Entity* MapDocument::createBrushEntity(const Assets::BrushEntityDefinition* definition) {
+        Model::EntityNode* MapDocument::createBrushEntity(const Assets::BrushEntityDefinition* definition) {
             ensure(definition != nullptr, "definition is null");
 
             const auto brushes = selectedNodes().brushes();
@@ -977,7 +977,7 @@ namespace TrenchBroom {
             bool operator()(const Model::WorldNode*) const  { return false; }
             bool operator()(const Model::LayerNode*) const  { return false; }
             bool operator()(const Model::GroupNode*) const  { return true;  }
-            bool operator()(const Model::Entity*) const { return true; }
+            bool operator()(const Model::EntityNode*) const { return true; }
             bool operator()(const Model::BrushNode* brush) const   { return brush->entity() == m_world; }
         };
 
@@ -1773,7 +1773,7 @@ namespace TrenchBroom {
             void doVisit(Model::WorldNode*) override   {}
             void doVisit(Model::LayerNode*) override   {}
             void doVisit(Model::GroupNode*) override   {}
-            void doVisit(Model::Entity*) override {}
+            void doVisit(Model::EntityNode*) override {}
             void doVisit(Model::BrushNode* brush) override   {
                 for (Model::BrushFace* face : brush->faces()) {
                     face->updateTexture(m_manager);
@@ -1786,7 +1786,7 @@ namespace TrenchBroom {
             void doVisit(Model::WorldNode*) override   {}
             void doVisit(Model::LayerNode*) override   {}
             void doVisit(Model::GroupNode*) override   {}
-            void doVisit(Model::Entity*) override {}
+            void doVisit(Model::EntityNode*) override {}
             void doVisit(Model::BrushNode* brush) override   {
                 for (Model::BrushFace* face : brush->faces()) {
                     face->setTexture(nullptr);
@@ -1830,7 +1830,7 @@ namespace TrenchBroom {
             void doVisit(Model::WorldNode* world) override   { handle(world); }
             void doVisit(Model::LayerNode*) override         {}
             void doVisit(Model::GroupNode*) override         {}
-            void doVisit(Model::Entity* entity) override { handle(entity); }
+            void doVisit(Model::EntityNode* entity) override { handle(entity); }
             void doVisit(Model::BrushNode*) override         {}
             void handle(Model::AttributableNode* attributable) {
                 Assets::EntityDefinition* definition = m_manager.definition(attributable);
@@ -1843,7 +1843,7 @@ namespace TrenchBroom {
             void doVisit(Model::WorldNode* world) override   { world->setDefinition(nullptr); }
             void doVisit(Model::LayerNode*) override         {}
             void doVisit(Model::GroupNode*) override         {}
-            void doVisit(Model::Entity* entity) override { entity->setDefinition(nullptr); }
+            void doVisit(Model::EntityNode* entity) override { entity->setDefinition(nullptr); }
             void doVisit(Model::BrushNode*) override         {}
         };
 
@@ -1892,7 +1892,7 @@ namespace TrenchBroom {
             void doVisit(Model::WorldNode*) override         {}
             void doVisit(Model::LayerNode*) override         {}
             void doVisit(Model::GroupNode*) override         {}
-            void doVisit(Model::Entity* entity) override {
+            void doVisit(Model::EntityNode* entity) override {
                 const auto modelSpec = Assets::safeGetModelSpecification(m_logger, entity->classname(), [&]() {
                     return entity->modelSpecification();
                 });
@@ -1907,7 +1907,7 @@ namespace TrenchBroom {
             void doVisit(Model::WorldNode*) override         {}
             void doVisit(Model::LayerNode*) override         {}
             void doVisit(Model::GroupNode*) override         {}
-            void doVisit(Model::Entity* entity) override { entity->setModelFrame(nullptr); }
+            void doVisit(Model::EntityNode* entity) override { entity->setModelFrame(nullptr); }
             void doVisit(Model::BrushNode*) override         {}
         };
 
@@ -2024,7 +2024,7 @@ namespace TrenchBroom {
             void doVisit(Model::WorldNode* world)   override { initializeNodeTags(world); }
             void doVisit(Model::LayerNode* layer)   override { initializeNodeTags(layer); }
             void doVisit(Model::GroupNode* group)   override { initializeNodeTags(group); }
-            void doVisit(Model::Entity* entity) override { initializeNodeTags(entity); }
+            void doVisit(Model::EntityNode* entity) override { initializeNodeTags(entity); }
             void doVisit(Model::BrushNode* brush)   override { initializeNodeTags(brush); }
 
             void initializeNodeTags(Model::Node* node) {
@@ -2042,7 +2042,7 @@ namespace TrenchBroom {
             void doVisit(Model::WorldNode* world)   override { initializeNodeTags(world); }
             void doVisit(Model::LayerNode* layer)   override { initializeNodeTags(layer); }
             void doVisit(Model::GroupNode* group)   override { initializeNodeTags(group); }
-            void doVisit(Model::Entity* entity) override { initializeNodeTags(entity); }
+            void doVisit(Model::EntityNode* entity) override { initializeNodeTags(entity); }
             void doVisit(Model::BrushNode* brush)   override { initializeNodeTags(brush); }
 
             void initializeNodeTags(Model::Node* node) {
@@ -2089,7 +2089,7 @@ namespace TrenchBroom {
             void doVisit(Model::WorldNode*) override         {}
             void doVisit(Model::LayerNode*) override         {}
             void doVisit(Model::GroupNode*) override         {}
-            void doVisit(Model::Entity*) override        {}
+            void doVisit(Model::EntityNode*) override        {}
             void doVisit(Model::BrushNode* brush)   override { brush->initializeTags(m_tagManager); }
         };
 
