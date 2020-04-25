@@ -355,7 +355,7 @@ namespace TrenchBroom {
 
         std::string MapDocument::serializeSelectedBrushFaces() {
             std::stringstream stream;
-            m_game->writeBrushFacesToStream(*m_world, m_selectedBrushFaces, stream);
+            m_game->writeBrushFacesToStream(*m_world, Model::toFaces(m_selectedBrushFaces), stream);
             return stream.str();
         }
 
@@ -521,7 +521,7 @@ namespace TrenchBroom {
             return m_selectedNodes;
         }
 
-        std::vector<Model::BrushFace*> MapDocument::allSelectedBrushFaces() const {
+        std::vector<Model::BrushFaceHandle> MapDocument::allSelectedBrushFaces() const {
             if (hasSelectedBrushFaces())
                 return selectedBrushFaces();
             Model::CollectBrushFacesVisitor visitor;
@@ -529,7 +529,7 @@ namespace TrenchBroom {
             return visitor.faces();
         }
 
-        std::vector<Model::BrushFace*> MapDocument::selectedBrushFaces() const {
+        std::vector<Model::BrushFaceHandle> MapDocument::selectedBrushFaces() const {
             return m_selectedBrushFaces;
         }
 
@@ -653,13 +653,13 @@ namespace TrenchBroom {
             executeAndStore(SelectionCommand::select(std::vector<Model::Node*>(1, node)));
         }
 
-        void MapDocument::select(const std::vector<Model::BrushFace*>& faces) {
-            executeAndStore(SelectionCommand::select(faces));
+        void MapDocument::select(const std::vector<Model::BrushFaceHandle>& handles) {
+            executeAndStore(SelectionCommand::select(handles));
         }
 
-        void MapDocument::select(Model::BrushFace* face) {
-            executeAndStore(SelectionCommand::select(std::vector<Model::BrushFace*>(1, face)));
-            setCurrentTextureName(face->textureName());
+        void MapDocument::select(const Model::BrushFaceHandle& handle) {
+            executeAndStore(SelectionCommand::select({ handle }));
+            setCurrentTextureName(handle.face()->textureName());
         }
 
         void MapDocument::convertToFaceSelection() {
@@ -694,8 +694,8 @@ namespace TrenchBroom {
             executeAndStore(SelectionCommand::deselect(nodes));
         }
 
-        void MapDocument::deselect(Model::BrushFace* face) {
-            executeAndStore(SelectionCommand::deselect(std::vector<Model::BrushFace*>(1, face)));
+        void MapDocument::deselect(const Model::BrushFaceHandle& handle) {
+            executeAndStore(SelectionCommand::deselect({ handle }));
         }
 
         void MapDocument::updateLastSelectionBounds() {
@@ -1159,8 +1159,8 @@ namespace TrenchBroom {
             Model::Polyhedron3 polyhedron;
 
             if (hasSelectedBrushFaces()) {
-                for (const Model::BrushFace* face : selectedBrushFaces()) {
-                    for (const Model::BrushVertex* vertex : face->vertices()) {
+                for (const auto& handle : selectedBrushFaces()) {
+                    for (const Model::BrushVertex* vertex : handle.face()->vertices()) {
                         polyhedron.addPoint(vertex->position());
                     }
                 }
@@ -1188,7 +1188,7 @@ namespace TrenchBroom {
             if (!selectedNodes().brushes().empty()) {
                 parent = selectedNodes().brushes().front()->parent();
             } else if (!selectedBrushFaces().empty()) {
-                parent = selectedBrushFaces().front()->brush()->node()->parent();
+                parent = selectedBrushFaces().front().node()->parent();
             } else {
                 parent = currentParent();
             }
@@ -1357,7 +1357,7 @@ namespace TrenchBroom {
         }
 
         void MapDocument::setTexture(Assets::Texture* texture, const bool toggle) {
-            const std::vector<Model::BrushFace*> faces = allSelectedBrushFaces();
+            const auto faces = allSelectedBrushFaces();
 
             if (texture != nullptr) {
                 if (faces.empty()) {
@@ -1367,7 +1367,10 @@ namespace TrenchBroom {
                         setCurrentTextureName(texture->name());
                     }
                 } else {
-                    if (hasTexture(faces, texture) && toggle) {
+                    const auto hasTexture = std::any_of(std::begin(faces), std::end(faces), [&](const auto& handle) {
+                        return handle.face()->texture() == texture;
+                    });
+                    if (hasTexture && toggle) {
                         texture = nullptr;
                         setCurrentTextureName(Model::BrushFaceAttributes::NoTextureName);
                     } else {
@@ -1385,15 +1388,6 @@ namespace TrenchBroom {
                 }
                 executeAndStore(ChangeBrushFaceAttributesCommand::command(request));
             }
-        }
-
-        bool MapDocument::hasTexture(const std::vector<Model::BrushFace*>& faces, Assets::Texture* texture) const {
-            for (const Model::BrushFace* face : faces) {
-                if (face->texture() != texture)
-                    return false;
-            }
-
-            return true;
         }
 
         bool MapDocument::setFaceAttributes(const Model::BrushFaceAttributes& attributes) {
@@ -1485,10 +1479,10 @@ namespace TrenchBroom {
 
         void MapDocument::printVertices() {
             if (hasSelectedBrushFaces()) {
-                for (const Model::BrushFace* face : m_selectedBrushFaces) {
+                for (const auto& handle : m_selectedBrushFaces) {
                     std::stringstream str;
                     str.precision(17);
-                    for (const Model::BrushVertex* vertex : face->vertices()) {
+                    for (const Model::BrushVertex* vertex : handle.face()->vertices()) {
                         str << "(" << vertex->position() << ") ";
                     }
                     info(str.str());
